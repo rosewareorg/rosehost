@@ -1,0 +1,14 @@
+[package]
+name = "webhost"
+version = "0.1.1"
+edition = "2021"
+
+[dependencies]
+httparse = "1.9.5"
+log = "0.4.24"
+thiserror = "2.0.11"
+http-router = { git = "https://github.com/rosewareorg/http-router.git" }
+clang_log = "2.0.5"
+
+[dev-dependencies]
+clang_log = "2.0.5"
