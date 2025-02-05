@@ -43,15 +43,18 @@ fn main() {
 
     clang_log::init(log::Level::Trace, "webhost");
     let mut app = App::new("0.0.0.0:8000", 20);
+
+    // It's recommended to hard-code frequently acessed paths, they are stored durinf compile-time if you use "include_bytes!()"
+
     // It checks if the requested path is hard-coded before dynamically getting the data. 
     app.get("/silly.jpg", |mut ctx| {
-        let response = Response::new().body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg");
+        let response = Response::new().body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
 
     app.get("/", |mut ctx| {
-        let response = Response::new().body(include_bytes!("www/index.html")).header("content-type", b"text/html");
+        let response = Response::new().body(include_bytes!("www/index.html")).header("content-type", b"text/html").status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
