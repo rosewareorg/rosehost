@@ -1,72 +1,63 @@
-use clang_log::init;
-use http_router::prelude::*;
+use ekero::{
+    prelude::*,
+    context::Context
+};
 use std::fs;
 
 
 fn error404() -> Response {
-    Response::new().body(include_bytes!("www/404/index.html")).header("content-type", "text/html")
+    Response::new().body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
 }
 
 fn load_file(path: &String) -> Response {
-    Response::new().body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice())
+    Response::new().body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
 }
 
-struct RedirectRoute;
+fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error + 'static)>> {
+    let response;
 
-impl Route for RedirectRoute {
-    const RTYPE: RequestType = RequestType::Get;
-    const PATH: &str = "/";
+    let req = &ctx.request().unwrap();
+    // Uncomment the following line and remove the already present version for a more build-optimized version.
 
-    fn handler(&mut self) -> fn(Request) -> Response {
-        |req| {
-            // Uncomment the following line and remove the already present version for a more build-optimized version.
-
-            //let path = format!("{}{}", fs::canonicalize("./www/").expect("Wrongly configured server, directory www not found").display(), req.path);
-            let path = format!("{}{}", fs::canonicalize("./src/www/").unwrap_or(fs::canonicalize("./www/").unwrap_or(fs::canonicalize(".").expect("Wrongly configured server, directory www not found"))).display(), req.path);
-            let exists = fs::exists(&path).unwrap_or(false);
-            if exists {
-                let metadata = fs::metadata(&path).expect("MetaData could not be reached");
-                if metadata.is_dir() {
-                    return load_file(&format!("{}{}", path, if path.ends_with("/") {"index.html"} else {"/index.html"})).header("content-type", "text/html");
-                } else if metadata.is_file() {
-                    return load_file(&path);
-                } else {
-                    return error404();
-                }
-            } else {
-                error404()
-            }
-        } 
+    //let path = format!("{}{}", fs::canonicalize("./www/").expect("Wrongly configured server, directory www not found").display(), req.path);
+    let path = format!("{}{}", fs::canonicalize("./src/www/").unwrap_or(fs::canonicalize("./www/").unwrap_or(fs::canonicalize(".").expect("Wrongly configured server, directory www not found"))).display(), req.path);
+    let exists = fs::exists(&path).unwrap_or(false);
+    if exists {
+        let metadata = fs::metadata(&path).expect("MetaData could not be reached");
+        if metadata.is_dir() {
+            response = load_file(&format!("{}{}", path, if path.ends_with("/") {"index.html"} else {"/index.html"})).header("content-type", b"text/html");
+        } else if metadata.is_file() {
+             response = load_file(&path);
+        } else {
+            response = error404();
+        }
+    } else {
+        response = error404();
     }
-}
-
-// If something is requested often, hard-code it for a faster response and a lesser work-load.
-struct ImageRoute;
-
-impl Route for ImageRoute {
-    const RTYPE: RequestType = RequestType::Get;
-    const PATH: &str = "/silly.jpg";
-    fn handler(&mut self) -> fn(Request) -> Response {
-        |_req| Response::new().body(include_bytes!("www/silly.jpg")).header("content-type", "image/jpeg")
-    }
-}
-
-struct HomeRoute;
-
-impl Route for HomeRoute {
-    const RTYPE: RequestType = RequestType::Get;
-    const PATH: &str = "/";
-    fn handler(&mut self) -> fn(Request) -> Response {
-        |_req| Response::new().body(include_bytes!("www/index.html")).header("content-type", "text/html")
-    }
+    response.write_to(&mut ctx)?;
+    Ok(())
 }
 
 fn main() {
-    init(log::Level::Trace, "webhost");
-    let mut server = Server::new(8080, 20);
+    let host_path = fs::canonicalize("./src/www/").expect("Wrongly configured server, folder 'www' not present.");
+    println!("Host Path: {}", host_path.display());
+
+    clang_log::init(log::Level::Trace, "webhost");
+    let mut app = App::new("0.0.0.0:8000", 20);
     // It checks if the requested path is hard-coded before dynamically getting the data. 
-    server.add_route(ImageRoute);
-    server.add_route(HomeRoute);
-    server.add_default_handler(RedirectRoute);
-    server.run()
+    app.get("/silly.jpg", |mut ctx| {
+        let response = Response::new().body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg");
+        response.write_to(&mut ctx)?;
+        Ok(())
+    });
+
+    app.get("/", |mut ctx| {
+        let response = Response::new().body(include_bytes!("www/index.html")).header("content-type", b"text/html");
+        response.write_to(&mut ctx)?;
+        Ok(())
+    });
+
+    app.set_default_handler(redirect_handler);
+
+    app.poll_forever()
 }
