@@ -5,7 +5,7 @@ Powered by RoseWare Ekerö.
 
 
 Code:
-``
+```
 use ekero::{
     prelude::*,
     context::Context
@@ -69,4 +69,4 @@ fn main() {
 
     app.poll_forever()
 }
-``
+```
