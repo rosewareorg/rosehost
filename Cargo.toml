@@ -4,10 +4,9 @@ version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-httparse = "1.9.5"
-log = "0.4.24"
-thiserror = "2.0.11"
-http-router = { git = "https://github.com/rosewareorg/http-router.git" }
+httparse = "1.10.0"
+log = "0.4.25"
+ekero = { git = "https://github.com/rosewareorg/ekero.git" }
 clang_log = "2.0.5"
 
 [dev-dependencies]
