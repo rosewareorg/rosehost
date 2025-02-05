@@ -1,4 +1,4 @@
-# RoseWare WebHost
+# RoseWare WebHost / RoseHost
 A both static and dynamic Website hosting server made in rust.
 
 Powered by RoseWare Ekerö.
@@ -18,13 +18,16 @@ use ekero::{
 };
 use std::fs;
 
+fn new_response() -> Response {
+    Response::new().header("Server", b"RoseHost/0.1.1")
+}
 
 fn error404() -> Response {
-    Response::new().body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
+    new_response().body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
 }
 
 fn load_file(path: &String) -> Response {
-    Response::new().body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
+    new_response().body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
 }
 
 fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error + 'static)>> {
@@ -62,13 +65,13 @@ fn main() {
 
     // It checks if the requested path is hard-coded before dynamically getting the data. 
     app.get("/silly.jpg", |mut ctx| {
-        let response = Response::new().body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
+        let response = new_response().body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
 
     app.get("/", |mut ctx| {
-        let response = Response::new().body(include_bytes!("www/index.html")).header("content-type", b"text/html").status_code(200);
+        let response = new_response().body(include_bytes!("www/index.html")).header("content-type", b"text/html").status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
