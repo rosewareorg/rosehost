@@ -5,7 +5,7 @@ Powered by RoseWare Ekerö.
 
 
 Code:
-```
+```rust
 use ekero::{
     prelude::*,
     context::Context
