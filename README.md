@@ -3,8 +3,13 @@ A both static and dynamic Website hosting server made in rust.
 
 Powered by RoseWare Ekerö.
 
+## Notice:
+Ekerö currently doesn't support: 
+- Search Queries
+- HTTPS
+These features are in development.
 
-Code:
+## Code:
 ```rust
 use ekero::{
     prelude::*,
