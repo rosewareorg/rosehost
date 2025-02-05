@@ -21,8 +21,7 @@ fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error +
 
     //let path = format!("{}{}", fs::canonicalize("./www/").expect("Wrongly configured server, directory www not found").display(), req.path);
     let path = format!("{}{}", fs::canonicalize("./src/www/").unwrap_or(fs::canonicalize("./www/").unwrap_or(fs::canonicalize(".").expect("Wrongly configured server, directory www not found"))).display(), req.path);
-    let exists = fs::exists(&path).unwrap_or(false);
-    if exists {
+    if fs::exists(&path).unwrap_or(false) {
         let metadata = fs::metadata(&path).expect("MetaData could not be reached");
         if metadata.is_dir() {
             response = load_file(&format!("{}{}", path, if path.ends_with("/") {"index.html"} else {"/index.html"})).header("content-type", b"text/html");
