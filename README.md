@@ -8,7 +8,7 @@ Ekerö currently doesn't support:
 - Search Queries
 - HTTPS
 
-These features are in development.
+*These features are in development.*
 
 ## Code:
 ```rust
