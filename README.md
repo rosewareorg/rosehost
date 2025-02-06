@@ -60,7 +60,7 @@ fn load_file(path: &String) -> Response {
 }
 
 fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error + 'static)>> {
-    let mut response = error400();
+    let response;
 
     if let Ok(req) = &ctx.request() {
         // Block relative paths for server security, the program is recommended to only have read-access for the "www" folder too, remove any unecessary permissions.
@@ -88,6 +88,8 @@ fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error +
         } else {
             response = error404();
         }
+    } else {
+        response = error400();
     }
     response.write_to(&mut ctx)?;
     Ok(())
