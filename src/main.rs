@@ -21,7 +21,11 @@ fn error400() -> Response {
 }
 
 fn load_file(path: &String) -> Response {
-    new_response_body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
+    match fs::read(path) {
+        Err(_) => error404(),
+        Ok(t) => new_response_body(t.as_slice()).status_code(202)
+    }
+    //new_response_body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
 }
 
 fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error + 'static)>> {
