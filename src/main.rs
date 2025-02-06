@@ -16,6 +16,10 @@ fn error404() -> Response {
     new_response_body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
 }
 
+fn error400() -> Response {
+    new_response_body(include_bytes!("www/400/index.html")).header("content-type", b"text/html").status_code(400)
+}
+
 fn load_file(path: &String) -> Response {
     new_response_body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
 }
@@ -24,6 +28,13 @@ fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error +
     let response;
 
     let req = &ctx.request().unwrap();
+
+    // Block relative paths for server security, the program is recommended to only have read-access for the "www" folder too, remove any unecessary permissions.
+    if req.path.contains("./") || req.path.contains("/.") {
+        response = error400();
+        response.write_to(&mut ctx)?;
+        return Ok(());
+    }
     // Uncomment the following line and remove the already present version for a more build-optimized version.
 
     //let path = format!("{}{}", fs::canonicalize("./www/").expect("Wrongly configured server, directory www not found").display(), req.path);
@@ -54,6 +65,12 @@ fn main() {
     // It's recommended to hard-code frequently acessed paths, they are stored during compile-time if you use "include_bytes!()".
 
     // It checks if the requested path is hard-coded before dynamically getting the data. 
+    app.get("/favicon.ico", |mut ctx| {
+        let response = new_response_body(include_bytes!("www/favicon.ico")).header("content-type", b"image/x-icon").status_code(200);
+        response.write_to(&mut ctx)?;
+        Ok(())
+    });
+
     app.get("/silly.jpg", |mut ctx| {
         let response = new_response_body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
         response.write_to(&mut ctx)?;
