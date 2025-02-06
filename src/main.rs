@@ -8,12 +8,16 @@ fn new_response() -> Response {
     Response::new().header("Server", b"RoseHost/0.1.1")
 }
 
+fn new_response_body(body: &[u8]) -> Response {
+    new_response().body(body).header("Content-Length", format!("{}", body.len()).as_bytes())
+}
+
 fn error404() -> Response {
-    new_response().body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
+    new_response_body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
 }
 
 fn load_file(path: &String) -> Response {
-    new_response().body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
+    new_response_body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
 }
 
 fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error + 'static)>> {
@@ -44,20 +48,20 @@ fn main() {
     let host_path = fs::canonicalize("./src/www/").expect("Wrongly configured server, folder 'www' not present.");
     println!("Host Path: {}", host_path.display());
 
-    clang_log::init(log::Level::Trace, "webhost");
+    clang_log::init(log::Level::Trace, "rosehost");
     let mut app = App::new("0.0.0.0:8000", 20);
 
-    // It's recommended to hard-code frequently acessed paths, they are stored durinf compile-time if you use "include_bytes!()"
+    // It's recommended to hard-code frequently acessed paths, they are stored during compile-time if you use "include_bytes!()".
 
     // It checks if the requested path is hard-coded before dynamically getting the data. 
     app.get("/silly.jpg", |mut ctx| {
-        let response = new_response().body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
+        let response = new_response_body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
 
     app.get("/", |mut ctx| {
-        let response = new_response().body(include_bytes!("www/index.html")).header("content-type", b"text/html").status_code(200);
+        let response = new_response_body(include_bytes!("www/index.html")).header("content-type", b"text/html").status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
