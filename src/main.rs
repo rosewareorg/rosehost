@@ -1,7 +1,4 @@
-use ekero::{
-    prelude::*,
-    context::Context
-};
+use ekero::{context::Context, prelude::*};
 use std::fs;
 
 fn new_response() -> Response {
@@ -9,51 +6,73 @@ fn new_response() -> Response {
 }
 
 fn new_response_body(body: &[u8]) -> Response {
-    new_response().body(body).header("Content-Length", format!("{}", body.len()).as_bytes())
+    new_response()
+        .body(body)
+        .header("Content-Length", format!("{}", body.len()).as_bytes())
 }
 
 fn error404() -> Response {
-    new_response_body(include_bytes!("www/404/index.html")).header("content-type", b"text/html").status_code(404)
+    new_response_body(include_bytes!("www/error/404.html"))
+        .header("content-type", b"text/html")
+        .status_code(404)
 }
 
 fn error400() -> Response {
-    new_response_body(include_bytes!("www/400/index.html")).header("content-type", b"text/html").status_code(400)
+    new_response_body(include_bytes!("www/error/400.html"))
+        .header("content-type", b"text/html")
+        .status_code(400)
+}
+
+fn error418() -> Response {
+    new_response_body(include_bytes!("www/error/418.html"))
+        .header("content-type", b"text/html")
+        .status_code(418)
+}
+
+fn error500() -> Response {
+    new_response_body(include_bytes!("www/error/500.html"))
+        .header("content-type", b"text/html")
+        .status_code(500)
 }
 
 fn load_file(path: &String) -> Response {
     match fs::read(path) {
         Err(_) => error404(),
-        Ok(t) => new_response_body(t.as_slice()).status_code(202)
+        Ok(t) => new_response_body(t.as_slice()).status_code(202),
+        //_ => error500()
     }
     //new_response_body(fs::read(path).unwrap_or(include_bytes!("www/404/index.html").to_vec()).as_slice()).status_code(202)
 }
 
 fn redirect_handler(mut ctx: Context) -> Result<(), Box<(dyn std::error::Error + 'static)>> {
-    let response;
+    let mut response = error400();
 
-    let req = &ctx.request().unwrap();
+    if let Ok(req) = &ctx.request() {
+        // Block relative paths for server security, the program is recommended to only have read-access for the "www" folder too, remove any unecessary permissions.
+        if req.path.contains("./") || req.path.contains("/.") {
+            response = error418();
+            response.write_to(&mut ctx)?;
+            return Ok(());
+        }
+        // Uncomment the following line and remove the already present version for a more build-optimized version.
 
-    // Block relative paths for server security, the program is recommended to only have read-access for the "www" folder too, remove any unecessary permissions.
-    if req.path.contains("./") || req.path.contains("/.") {
-        response = error400();
-        response.write_to(&mut ctx)?;
-        return Ok(());
-    }
-    // Uncomment the following line and remove the already present version for a more build-optimized version.
-
-    //let path = format!("{}{}", fs::canonicalize("./www/").expect("Wrongly configured server, directory www not found").display(), req.path);
-    let path = format!("{}{}", fs::canonicalize("./src/www/").unwrap_or(fs::canonicalize("./www/").unwrap_or(fs::canonicalize(".").expect("Wrongly configured server, directory www not found"))).display(), req.path);
-    if fs::exists(&path).unwrap_or(false) {
-        let metadata = fs::metadata(&path).expect("MetaData could not be reached");
-        if metadata.is_dir() {
-            response = load_file(&format!("{}{}", path, if path.ends_with("/") {"index.html"} else {"/index.html"})).header("content-type", b"text/html");
-        } else if metadata.is_file() {
-             response = load_file(&path);
+        //let path = format!("{}{}", fs::canonicalize("./www/").expect("Wrongly configured server, directory www not found").display(), req.path);
+        let path = format!("{}{}", fs::canonicalize("./src/www/").unwrap_or(fs::canonicalize("./www/").unwrap_or(fs::canonicalize(".").expect("Wrongly configured server, directory www not found"))).display(), req.path);
+        if fs::exists(&path).unwrap_or(false) {
+            if let Ok(metadata) = fs::metadata(&path) {
+                if metadata.is_dir() {
+                    response = load_file(&format!("{}{}", path, if path.ends_with("/") {"index.html"} else {"/index.html"})).header("content-type", b"text/html");
+                } else if metadata.is_file() {
+                    response = load_file(&path);
+                } else {
+                    response = error404();
+                }
+            } else {
+                response = error500();
+            }
         } else {
             response = error404();
         }
-    } else {
-        response = error404();
     }
     response.write_to(&mut ctx)?;
     Ok(())
@@ -68,21 +87,35 @@ fn main() {
 
     // It's recommended to hard-code frequently acessed paths, they are stored during compile-time if you use "include_bytes!()".
 
-    // It checks if the requested path is hard-coded before dynamically getting the data. 
+    // It checks if the requested path is hard-coded before dynamically getting the data.
     app.get("/favicon.ico", |mut ctx| {
-        let response = new_response_body(include_bytes!("www/favicon.ico")).header("content-type", b"image/x-icon").status_code(200);
+        let response = new_response_body(include_bytes!("www/favicon.ico"))
+            .header("content-type", b"image/x-icon")
+            .status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
 
-    app.get("/silly.jpg", |mut ctx| {
-        let response = new_response_body(include_bytes!("www/silly.jpg")).header("content-type", b"image/jpeg").status_code(200);
+    app.get("/media/silly.webp", |mut ctx| {
+        let response = new_response_body(include_bytes!("www/media/silly.webp"))
+            .header("content-type", b"image/webp")
+            .status_code(200);
+        response.write_to(&mut ctx)?;
+        Ok(())
+    });
+
+    app.get("/media/confused.webp", |mut ctx| {
+        let response = new_response_body(include_bytes!("www/media/confused.webp"))
+            .header("content-type", b"image/webp")
+            .status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
 
     app.get("/", |mut ctx| {
-        let response = new_response_body(include_bytes!("www/index.html")).header("content-type", b"text/html").status_code(200);
+        let response = new_response_body(include_bytes!("www/index.html"))
+            .header("content-type", b"text/html")
+            .status_code(200);
         response.write_to(&mut ctx)?;
         Ok(())
     });
