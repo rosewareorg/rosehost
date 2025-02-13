@@ -8,7 +8,7 @@ Ekerö (v. 0.1.4) currently doesn't support:
 - https
 
 ### Setup:
-Pre-build make sure the directory "www" in the "src" directory and that all resources using a "include_[...]!()" macro is already present.
+Pre-build make sure the directory "www" is in the "src" directory and that all resources using a "include_[...]!()" macro is already present.
 
 Post-build make sure the "www" directory is in the same directory as the executable.
 
