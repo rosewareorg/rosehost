@@ -44,6 +44,7 @@ fn main() {
 
     log::info!("Host Path: {}", host_path.display());
 
+    
     let mut app = App::new("0.0.0.0:8000", 20, State { host_path });
 
     app.set_default_handler(|ctx| {
@@ -73,22 +74,18 @@ fn main() {
             _ => return Ok(new_html_response(include_bytes!("www/error/500.html"), 500)),
         };
 
-        if metadata.is_dir() {
-            response = load_file(&format!(
-                "{}{}",
+        response = if metadata.is_dir() {
+            load_file(&format!(
+                "{}{}index.html",
                 path,
-                if path.ends_with("/") {
-                    "index.html"
-                } else {
-                    "/index.html"
-                }
+                if path.ends_with("/") { "" } else { "/" }
             ))
-            .header("content-type", "text/html");
+            .header("Content-Type", "text/html")
         } else if metadata.is_file() {
-            response = load_file(&path);
+            load_file(&path)
         } else {
-            response = new_html_response(include_bytes!("www/error/404.html"), 404);
-        }
+            new_html_response(include_bytes!("www/error/404.html"), 404)
+        };
 
         Ok(response)
     });
@@ -99,20 +96,20 @@ fn main() {
     // before dynamically getting the data.
     app.get("/favicon.ico", |_ctx| {
         Ok(new_bytes_response(include_bytes!("www/favicon.ico"), 200)
-            .header("content-type", "image/x-icon"))
+            .header("Content-Type", "image/x-icon"))
     });
 
     app.get("/media/silly.webp", |_ctx| {
         Ok(
             new_bytes_response(include_bytes!("www/media/silly.webp"), 200)
-                .header("content-type", "image/webp"),
+                .header("Content-Type", "image/webp"),
         )
     });
 
     app.get("/media/confused.webp", |_ctx| {
         Ok(
             new_bytes_response(include_bytes!("www/media/confused.webp"), 200)
-                .header("content-type", "image/webp"),
+                .header("Content-Type", "image/webp"),
         )
     });
 
@@ -120,7 +117,7 @@ fn main() {
     app.get("/media/catshot-roulette.webm", |_ctx| {
         Ok(
             new_bytes_response(include_bytes!("www/media/catshot-roulette.webm"), 200)
-                .header("content-type", "video/webm"),
+                .header("Content-Type", "video/webm"),
         )
     });
 
