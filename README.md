@@ -1,5 +1,6 @@
 # rosehost
-an example ekerö app
+
+Website hosting program and an example Ekerö app.
 
 ### note:
 Ekerö (v. 0.1.4) currently doesn't support: 
