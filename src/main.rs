@@ -4,7 +4,7 @@ mod serverresource;
 
 use ekero::prelude::*;
 use file::File;
-use std::{fs, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 
 use html::Html;
 use serverresource::ServerResource;
@@ -37,8 +37,10 @@ fn load_file(path: &String) -> Response {
 fn main() {
     clang_log::init(log::Level::Trace, "rosehost");
 
-    let host_path = fs::canonicalize("./src/www/")
-        .expect("Wrongly configured server, folder 'www' not present.");
+    let args: Vec<String> = env::args().collect();
+
+    let host_path = fs::canonicalize(if &args.len() > &1 { &args[1] } else { "./www/" })
+        .expect("Wrongly configured server, folder 'www' or specified folder not present.");
 
     log::info!("Host Path: {}", host_path.display());
 
