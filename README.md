@@ -1,18 +1,12 @@
 # rosehost
+website hosting program and an example ekerö app.
 
-Website hosting program and an example Ekerö app.
-
-### Note:
-Ekerö (v. 0.1.4) currently doesn't support: 
-- search queries (in v. 0.1.5)
-- https
-
-### Setup:
+### setup
 Pre-build make sure the directory "www" is in the "src" directory and that all resources using a "include_[...]!()" macro is already present.
 
 Post-build make sure the "www" directory is in the same directory as the executable.
 
-### Useage:
+### usage
 Pre-build:
 ```bash
 cargo run "./src/www/"
@@ -22,4 +16,7 @@ Post-build:
 ./rosehost
 ```
 
-Read through the main script [here](https://github.com/rosewareorg/rosehost/blob/main/src/main.rs).
+### note
+ekerö (v. 0.1.4) currently doesn't support: 
+- search queries (in v. 0.1.5)
+- https

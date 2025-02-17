@@ -44,7 +44,6 @@ fn main() {
 
     log::info!("Host Path: {}", host_path.display());
 
-    
     let mut app = App::new("0.0.0.0:8000", 20, State { host_path });
 
     app.set_default_handler(|ctx| {
