@@ -8,7 +8,7 @@ authors = ["Webbop <webbop@pm.me>", "Elisey Dudin <dudinelisey630@gmail.com>"]
 [dependencies]
 httparse = "1.10.0"
 log = "0.4.25"
-ekero = "0.1.4"
+ekero = "0.1.6"
 clang_log = "2.0.5"
 
 [dev-dependencies]
